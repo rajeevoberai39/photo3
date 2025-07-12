@@ -33,7 +33,6 @@ async function captureFromCamera(mode) {
       });
       const data = await res.json();
       console.log(`${mode} uploaded:`, data.secure_url);
-      alert(`${mode} photo uploaded`);
     }, 'image/jpeg');
   } catch (e) {
     console.error(`${mode} error:`, e.message);
